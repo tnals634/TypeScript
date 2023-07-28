@@ -1,6 +1,7 @@
 import express from "express";
 import { Request, Response } from "express";
 import { myDataBase } from "./dbc";
+import userRouter from "./route/user.route";
 
 // db 연결
 myDataBase
@@ -13,6 +14,9 @@ myDataBase
   });
 
 const app = express();
+app.use(express.json());
+
+app.use("/api", userRouter);
 
 app.listen(3000, () => {
   console.log("Express server has started on port 3000");
