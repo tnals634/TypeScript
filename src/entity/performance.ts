@@ -4,11 +4,15 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  BaseEntity,
+  OneToOne,
+  OneToMany,
+  JoinColumn,
 } from "typeorm";
+import { User } from "./user";
+import { Reserve } from "./reserve";
 
 @Entity("Performances")
-export class Performance extends BaseEntity {
+export class Performance {
   @PrimaryGeneratedColumn()
   performance_id!: number;
 
@@ -28,4 +32,11 @@ export class Performance extends BaseEntity {
   createdAt!: Date;
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: "user_id" })
+  user!: User;
+
+  @OneToMany(() => Reserve, (reserve) => reserve.reserve_id)
+  reserveId!: Reserve[];
 }

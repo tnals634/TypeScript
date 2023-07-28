@@ -4,11 +4,13 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  BaseEntity,
+  ManyToOne,
+  JoinColumn,
 } from "typeorm";
+import { UserInfo } from "./userInfo";
 
 @Entity("Points")
-export class Point extends BaseEntity {
+export class Point {
   @PrimaryGeneratedColumn()
   point_id!: number;
 
@@ -28,4 +30,8 @@ export class Point extends BaseEntity {
   createdAt!: Date;
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @ManyToOne(() => UserInfo, (userInfo) => userInfo.pointId)
+  @JoinColumn({ name: "user_info_id" })
+  userInfo!: UserInfo;
 }
