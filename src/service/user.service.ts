@@ -2,9 +2,14 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { User } from "../entity/user";
 import { UserInfo } from "../entity/userInfo";
+import { Point } from "../entity/point";
 import { IsEmailValid } from "../entity/isEmailValid";
 import { myDataBase } from "../dbc";
 import { emailCheck } from "../mail";
+import { Token } from "../entity/token";
+import crypto from "crypto";
+import { CustomError } from "../customClass";
+const { JWT_KEY, SECRET_KEY } = process.env;
 
 dotenv.config();
 export class UserService {
@@ -38,14 +43,23 @@ export class UserService {
     const isEmailValidauthCode = isEmailValid?.auth_code == authCode;
     if (!isEmailValidauthCode) throw new Error("인증번호가 일치하지 않습니다.");
 
+    const passwordToCrypto = crypto
+      .pbkdf2Sync(password, SECRET_KEY!.toString(), 11524, 64, "sha512")
+      .toString("hex");
+
     const user = new User();
     user.email = email;
-    user.password = password;
+    user.password = passwordToCrypto;
     user.group = group;
     const userInfo = new UserInfo();
     userInfo.name = name;
     userInfo.phone = phone;
     userInfo.user = user;
+    const point = new Point();
+    point.userInfo = userInfo;
+    point.point = 1000000;
+    point.point_status = 1;
+    point.point_reason = "포인트 지급";
 
     const result = await myDataBase.manager.transaction(
       async (transactionalEntityManager) => {
@@ -53,6 +67,7 @@ export class UserService {
         await transactionalEntityManager
           .getRepository(UserInfo)
           .insert(userInfo);
+        await transactionalEntityManager.getRepository(Point).insert(point);
       }
     );
     return { message: "회원가입에 성공하였습니다.", status: 201, result };
@@ -92,16 +107,32 @@ export class UserService {
     if (!email || !password) {
       throw new Error("check email or password");
     }
-
+    const passwordToCrypto = crypto
+      .pbkdf2Sync(password, SECRET_KEY!.toString(), 11524, 64, "sha512")
+      .toString("hex");
     const user = await myDataBase
       .getRepository(User)
       .findOneBy({ email: email });
-    if (!user || !email || !password || user.password !== password) {
+    if (!user || !email || !password || user.password !== passwordToCrypto) {
       throw new Error("이메일 또는 비밀번호를 입력해주세요");
     }
+    //jwt 토큰
 
-    // const token = await jwt.sign({ id: user.id, email: user.email }, JWT_KEY);
+    const secretKey: string = JWT_KEY || "jwt_secret_key";
+    const accessToken = jwt.sign({ user_id: user.user_id }, secretKey, {
+      expiresIn: "1m",
+    });
+    const refreshToken = jwt.sign({}, secretKey, { expiresIn: "7d" });
 
-    return { message: "로그인하였습니다.", status: 200, result: true };
+    const tokenObject = new Token();
+    tokenObject.refreshToken = refreshToken;
+    tokenObject.user_id = user.user_id;
+    await myDataBase.getRepository(Token).insert(tokenObject);
+    const token = { accessToken: accessToken, refreshToken: refreshToken };
+    return {
+      status: 200,
+      message: "로그인에 성공하였습니다.",
+      result: token,
+    };
   };
 }

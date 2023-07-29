@@ -22,14 +22,17 @@ export class UserController {
     }
   };
 
-  static findUser = async (req: Request, res: Response) => {
+  static login = async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
       const { status, message, result } = await UserService.login(
         email,
         password
       );
-      res.status(200).json({ message, result });
+      res.cookie("accessToken", result.accessToken); // Access Token을 Cookie에 전달한다.
+      res.cookie("refreshToken", result.refreshToken); // Refresh Token을 Cookie에 전달한다.
+
+      return res.status(status).json({ message });
     } catch (error) {
       const message = error;
       console.error(error);
@@ -52,4 +55,14 @@ export class UserController {
       return res.status(500).json({ message: "오류가 발생하였습니다." });
     }
   };
+
+  //   static findUser = async ( req:Request, res:Response) => {
+  //     try{
+
+  //     }catch(error){
+  //         console.error(error);
+  //         if (error) return res.status(403).json({ message: error });
+  //         return res.status(500).json({ message: "오류가 발생하였습니다." });
+  //       }
+  //   }
 }

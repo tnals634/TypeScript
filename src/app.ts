@@ -1,5 +1,5 @@
 import express from "express";
-import { Request, Response } from "express";
+import cookieParser from "cookie-parser";
 import { myDataBase } from "./dbc";
 import userRouter from "./route/user.route";
 
@@ -15,6 +15,7 @@ myDataBase
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/api", userRouter);
 

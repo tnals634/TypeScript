@@ -1,4 +1,5 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 const { MAIL_ID, MAIL_KEY } = process.env;
 import nodemailer from "nodemailer";
