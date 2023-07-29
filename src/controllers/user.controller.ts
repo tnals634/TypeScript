@@ -56,13 +56,16 @@ export class UserController {
     }
   };
 
-  //   static findUser = async ( req:Request, res:Response) => {
-  //     try{
+  static findUser = async (req: Request, res: Response) => {
+    try {
+      const user_id = req.cookies.refreshToken.user_id;
+      const { status, message, result } = await UserService.getProfile(user_id);
 
-  //     }catch(error){
-  //         console.error(error);
-  //         if (error) return res.status(403).json({ message: error });
-  //         return res.status(500).json({ message: "오류가 발생하였습니다." });
-  //       }
-  //   }
+      res.status(status).json({ result });
+    } catch (error) {
+      console.error(error);
+      if (error) return res.status(403).json({ message: error });
+      return res.status(500).json({ message: "오류가 발생하였습니다." });
+    }
+  };
 }

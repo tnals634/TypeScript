@@ -135,4 +135,34 @@ export class UserService {
       result: token,
     };
   };
+
+  static getProfile = async (user_id: number) => {
+    const result = await myDataBase.manager.transaction(
+      async (transactionalEntityManager) => {
+        const user = await transactionalEntityManager
+          .getRepository(User)
+          .findOneBy({ user_id: user_id });
+        const userInfo = await transactionalEntityManager
+          .getRepository(UserInfo)
+          .findOneBy({ user_info_id: user_id });
+        const point = await transactionalEntityManager
+          .getRepository(Point)
+          .findOneBy({ user_info_id: user_id });
+
+        return { user, userInfo, point };
+      }
+    );
+    console.log("-----");
+    console.log(result);
+    console.log("-----");
+
+    const payload = {
+      user_id: result.user?.user_id,
+      group: result.user?.group,
+      name: result.userInfo?.name,
+      phone: result.userInfo?.phone,
+      point: result.point?.point,
+    };
+    return { status: 200, message: "", result: payload };
+  };
 }
