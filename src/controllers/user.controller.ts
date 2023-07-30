@@ -29,14 +29,21 @@ export class UserController {
         email,
         password
       );
-      res.cookie("accessToken", result.accessToken); // Access Token을 Cookie에 전달한다.
-      res.cookie("refreshToken", result.refreshToken); // Refresh Token을 Cookie에 전달한다.
+      res.clearCookie("accessToken");
+      res.cookie("accessToken", `Bearer ${result.accessToken}`); // Access Token을 Cookie에 전달한다.
 
       return res.status(status).json({ message });
     } catch (error) {
-      const message = error;
-      console.error(error);
-      if (error) return res.status(403).json({ message: message });
+      if (error) {
+        const { email, password } = req.body;
+        const { status, message, result } = await UserService.loginError(
+          email,
+          password
+        );
+        res.clearCookie("accessToken");
+        res.cookie("accessToken", `Bearer ${result}`);
+        return res.status(status).json({ message: message });
+      }
       return res.status(500).json({ message: "회원가입에 실패하였습니다." });
     }
   };
@@ -58,7 +65,7 @@ export class UserController {
 
   static findUser = async (req: Request, res: Response) => {
     try {
-      const user_id = req.cookies.refreshToken.user_id;
+      const user_id = req.cookies.accessToken.user_id;
       const { status, message, result } = await UserService.getProfile(user_id);
 
       res.status(status).json({ result });
@@ -67,5 +74,15 @@ export class UserController {
       if (error) return res.status(403).json({ message: error });
       return res.status(500).json({ message: "오류가 발생하였습니다." });
     }
+  };
+
+  static logout = async (req: Request, res: Response) => {
+    try {
+      const user_id = res.locals.user.user_id;
+      const { status, message, result } = await UserService.logout(user_id);
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      res.status(status).json({ message: message });
+    } catch (error) {}
   };
 }

@@ -9,6 +9,7 @@ import { emailCheck } from "../mail";
 import { Token } from "../entity/token";
 import crypto from "crypto";
 import { CustomError } from "../customClass";
+import e from "express";
 const { JWT_KEY, SECRET_KEY } = process.env;
 
 dotenv.config();
@@ -117,23 +118,60 @@ export class UserService {
       throw new Error("이메일 또는 비밀번호를 입력해주세요");
     }
     //jwt 토큰
-
+    const existRefreshToken = await myDataBase
+      .getRepository(Token)
+      .findOneBy({ user_id: user.user_id });
     const secretKey: string = JWT_KEY || "jwt_secret_key";
+    if (!existRefreshToken) {
+      const accessToken = jwt.sign({ user_id: user.user_id }, secretKey, {
+        expiresIn: "1m",
+      });
+      const refreshToken = jwt.sign({}, secretKey, { expiresIn: "7d" });
+
+      const tokenObject = new Token();
+      tokenObject.refreshToken = refreshToken;
+      tokenObject.user_id = user.user_id;
+      await myDataBase.getRepository(Token).insert(tokenObject);
+      const token = { accessToken: accessToken, refreshToken: refreshToken };
+      return {
+        status: 201,
+        message: "로그인에 성공하였습니다.",
+        result: token,
+      };
+    }
+    jwt.verify(existRefreshToken.refreshToken, secretKey);
+    await myDataBase.getRepository(Token).delete({ user_id: user.user_id });
+    const tokenObject = new Token();
+    tokenObject.refreshToken = existRefreshToken.refreshToken;
+    tokenObject.user_id = user.user_id;
+    await myDataBase.getRepository(Token).insert(tokenObject);
+
     const accessToken = jwt.sign({ user_id: user.user_id }, secretKey, {
       expiresIn: "1m",
     });
-    const refreshToken = jwt.sign({}, secretKey, { expiresIn: "7d" });
-
-    const tokenObject = new Token();
-    tokenObject.refreshToken = refreshToken;
-    tokenObject.user_id = user.user_id;
-    await myDataBase.getRepository(Token).insert(tokenObject);
-    const token = { accessToken: accessToken, refreshToken: refreshToken };
-    return {
-      status: 200,
-      message: "로그인에 성공하였습니다.",
-      result: token,
+    const token = {
+      accessToken: accessToken,
+      refreshToken: existRefreshToken.refreshToken,
     };
+    return { status: 200, message: "로그인하였습니다.", result: token };
+  };
+
+  static loginError = async (email: string, password: string) => {
+    const user = await myDataBase
+      .getRepository(User)
+      .findOneBy({ email: email });
+    const secretKey: string = JWT_KEY || "jwt_secret_key";
+    const refreshToken = jwt.sign({}, secretKey, { expiresIn: "7d" });
+    const accessToken = jwt.sign({ user_id: user?.user_id }, secretKey, {
+      expiresIn: "1m",
+    });
+
+    await myDataBase.getRepository(Token).delete({ user_id: user?.user_id });
+    await myDataBase
+      .getRepository(Token)
+      .insert({ refreshToken: refreshToken, user_id: user?.user_id });
+
+    return { status: 200, message: "로그인하였습니다.", result: accessToken };
   };
 
   static getProfile = async (user_id: number) => {
@@ -152,10 +190,6 @@ export class UserService {
         return { user, userInfo, point };
       }
     );
-    console.log("-----");
-    console.log(result);
-    console.log("-----");
-
     const payload = {
       user_id: result.user?.user_id,
       group: result.user?.group,
@@ -164,5 +198,21 @@ export class UserService {
       point: result.point?.point,
     };
     return { status: 200, message: "", result: payload };
+  };
+
+  static logout = async (user_id: number) => {
+    const user = await myDataBase
+      .getRepository(User)
+      .findOneBy({ user_id: user_id });
+    if (!user) throw new Error("회원정보가 존재하지 않습니다.");
+
+    const existToken = await myDataBase
+      .getRepository(Token)
+      .findOneBy({ user_id: user_id });
+    if (!existToken) throw new Error("로그인이 되어있지 않습니다.");
+
+    await myDataBase.getRepository(Token).delete({ user_id: user_id });
+
+    return { status: 200, message: "로그아웃", result: true };
   };
 }

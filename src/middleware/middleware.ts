@@ -9,154 +9,131 @@ const { JWT_KEY } = process.env;
 const secretKey: string = JWT_KEY || "jwt_secret_key";
 
 export class authMiddleware {
-  static nonAuthMiddleware = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      if (req.cookies) throw new Error("로그인시 사용할 수 없습니다.");
-    } catch (error) {
-      console.log(error);
-      if (error) return res.status(403).json({ message: error });
-      return res.status(500).json({ message: "오류가 발생하였습니다." });
-    }
-  };
-
   static allAuthMiddleware = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
+    const accessToken = req.cookies.accessToken;
+    const refreshToken = req.cookies.refreshToken;
+    const existRefreshToken = await myDataBase
+      .getRepository(Token)
+      .findOneBy({ refreshToken: refreshToken });
+    const [accessAuthType, accessAuthToken] = (accessToken ?? "").split(" ");
     try {
-      const accessToken = req.cookies.accessToken;
-      const refreshToken = req.cookies.refreshToken;
-
-      if (!refreshToken)
-        return res
-          .status(400)
-          .json({ message: "Refresh Token이 존재하지 않습니다." });
-      if (!accessToken)
-        return res
-          .status(400)
-          .json({ message: "Access Token이 존재하지 않습니다." });
-
-      const isAccessTokenValidate = validateAccessToken(accessToken);
-      const isRefreshTokenValidate = validateRefreshToken(refreshToken);
-
-      if (!isRefreshTokenValidate)
-        return res
-          .status(419)
-          .json({ message: "Refresh Token이 만료되었습니다." });
-
-      if (!isAccessTokenValidate) {
-        const accessTokenId = await myDataBase
-          .getRepository(Token)
-          .findOneBy({ refreshToken: refreshToken });
-        if (!accessTokenId?.user_id)
-          return res.status(419).json({
-            message: "Refresh Token의 정보가 서버에 존재하지 않습니다.",
-          });
-
-        const newAccessToken = createAccessToken(accessTokenId.user_id);
-        res.cookie("accessToken", newAccessToken);
-        return res.json({ message: "Access Token을 새롭게 발급하였습니다." });
+      if (
+        accessAuthType !== "Bearer" &&
+        !accessAuthToken &&
+        !existRefreshToken
+      ) {
+        res.status(401).json({
+          errorMessage: "로그인 후에 이용할 수 있는 기능입니다.",
+        });
+        return;
       }
 
-      const payload = getAccessTokenPayload(accessToken);
-      return res.json({
-        message: `${payload}의 Payload를 가진 Token이 성공적으로 인증되었습니다.`,
-      });
+      // case 2) refreshToken들만 있을 때(accessToken만료가 아닌 쿠키 삭제로 인해 없는 경우)
+      // refreshToken을 검증 해서 검증이 되면 새 accessToken을 발급해서 쿠키에 저장
+      if (existRefreshToken && !accessAuthType && !accessAuthToken) {
+        jwt.verify(existRefreshToken.refreshToken, secretKey);
+        const accessToken = jwt.sign(
+          { user_id: existRefreshToken.user_id },
+          secretKey,
+          {
+            expiresIn: "1h",
+          }
+        );
+
+        res.cookie("accessToken", `Bearer ${accessToken}`);
+        const user = await myDataBase
+          .getRepository(User)
+          .findOneBy({ user_id: existRefreshToken.user_id });
+
+        if (!user) {
+          res.clearCookie("accessToken");
+          return res
+            .status(401)
+            .json({ errorMessage: "토큰 사용자가 존재하지 않습니다." });
+        }
+
+        res.locals.user = user;
+        next();
+      } else {
+        try {
+          // case 3) accessToken과 refreshToken이 둘다 있는 경우
+          // accessToken을 검증해 만료되지 않았으면 그대로 사용(refreshToken은 결국 accessToken이 만료 되었을 때만 사용하므로)
+          const userAccess = jwt.verify(accessAuthToken, secretKey);
+          const user = await myDataBase
+            .getRepository(User)
+            .findOneBy({ user_id: Object(userAccess)?.user_id });
+
+          if (!user) {
+            res.clearCookie("accessToken");
+            return res
+              .status(401)
+              .json({ errorMessage: "토큰 사용자가 존재하지 않습니다." });
+          }
+          res.locals.user = user;
+
+          next();
+        } catch (error) {
+          // case 4) 토큰이 둘 다 있는데 accessToken만 만료된 경우
+          // 이 때, refreshToken을 검증해 만료가 되지 않았다면 새 accessToken을 발급하고 만료 되었다면
+          // 만료된 refresh토큰을 삭제하고 다시 로그인 하도록 설정함.
+          console.log("error 1", error);
+          if (error) {
+            jwt.verify(existRefreshToken?.refreshToken!, secretKey);
+
+            const accessToken = jwt.sign(
+              { user_id: existRefreshToken?.user_id },
+              secretKey,
+              {
+                expiresIn: "1h",
+              }
+            );
+            res.cookie("accessToken", `Bearer ${accessToken}`);
+            const user = await myDataBase
+              .getRepository(User)
+              .findOneBy({ user_id: existRefreshToken?.user_id });
+
+            if (!user) {
+              res.clearCookie("accessToken");
+              res
+                .status(401)
+                .json({ errorMessage: "토큰 사용자가 존재하지 않습니다." });
+            }
+
+            res.locals.user = user;
+            next();
+          }
+        }
+      }
     } catch (error) {
-      console.log(error);
+      // accessToken과 refreshToken 모두 만료된 경우
+      // 여러 계정을 저장하기 때문에 가장 최근에 로그인 한 순서대로 비교를 해 만료되지 않은 사용자에게
+      // 등록/수정/삭제 권한을 주기 위해서 refreshToken이 만료된 유저는 토큰이 삭제가 되도록 구현
+      console.log("error 2", error);
+      if (error) {
+        if (existRefreshToken)
+          await myDataBase
+            .getRepository(Token)
+            .delete({ user_id: existRefreshToken.user_id });
+
+        res.status(401).json({
+          errorMessage: "토큰이 만료된 아이디입니다. 다시 로그인 해주세요.",
+        });
+        return;
+      } else {
+        console.log(error);
+        // 그 밖의 알수 없는 오류가 발생했을 때는 전부 삭제가 되도록 함
+        res.clearCookie("accessToken");
+        await myDataBase.getRepository(Token).delete({});
+        res.status(401).json({
+          errorMessage:
+            "전달된 쿠키에서 오류가 발생하였습니다. 모든 쿠키를 삭제합니다.",
+        });
+        return;
+      }
     }
   };
-
-  static adminAuthMiddleware = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const refreshTokenUserId = await req.cookies.refreshToken.user_id;
-
-      if (!refreshTokenUserId) throw new Error("로그인 후 사용가능합니다.");
-      const user = await myDataBase
-        .getRepository(User)
-        .findOneBy({ user_id: refreshTokenUserId });
-      if (user?.group != 1) throw new Error("관계자외 사용 금지입니다.");
-      next();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  static userAthMiddleware = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const refreshTokenUserId = await req.cookies.refreshToken.user_id;
-
-      if (!refreshTokenUserId) throw new Error("로그인 후 사용가능합니다.");
-      const user = await myDataBase
-        .getRepository(User)
-        .findOneBy({ user_id: refreshTokenUserId });
-      if (user?.group != 0) throw Error("사용자 외 사용 금지입니다.");
-      next();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-}
-
-// Access Token을 검증합니다.
-function validateAccessToken(accessToken: string) {
-  try {
-    jwt.verify(accessToken, secretKey); // JWT를 검증합니다.
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-// Refresh Token을 검증합니다.
-function validateRefreshToken(refreshToken: string) {
-  try {
-    jwt.verify(refreshToken, secretKey); // JWT를 검증합니다.
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-// Access Token의 Payload를 가져옵니다.
-function getAccessTokenPayload(accessToken: string) {
-  try {
-    const payload = jwt.verify(accessToken, secretKey); // JWT에서 Payload를 가져옵니다.
-    return payload;
-  } catch (error) {
-    return null;
-  }
-} // Access Token을 생성합니다.
-function createAccessToken(id: number) {
-  const accessToken = jwt.sign(
-    { id: id }, // JWT 데이터
-    secretKey, // 비밀키
-    { expiresIn: "1m" }
-  ); // Access Token이 10초 뒤에 만료되도록 설정합니다.
-
-  return accessToken;
-}
-
-// Refresh Token을 생성합니다.
-function createRefreshToken() {
-  const refreshToken = jwt.sign(
-    {}, // JWT 데이터
-    secretKey, // 비밀키
-    { expiresIn: "7d" }
-  ); // Refresh Token이 7일 뒤에 만료되도록 설정합니다.
-
-  return refreshToken;
 }
