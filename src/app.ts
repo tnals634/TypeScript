@@ -1,7 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import { myDataBase } from "./dbc";
-import userRouter from "./route/user.route";
+import { userRouter, performanceRouter } from "./route";
 
 // db 연결
 myDataBase
@@ -17,7 +17,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/api", userRouter);
+app.use("/api", [userRouter, performanceRouter]);
 
 app.listen(3000, () => {
   console.log("Express server has started on port 3000");

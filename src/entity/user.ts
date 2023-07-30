@@ -4,7 +4,9 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from "typeorm";
+import { Performance } from "./performance";
 
 @Entity("Users")
 export class User {
@@ -23,4 +25,7 @@ export class User {
   createdAt!: Date;
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @OneToMany(() => Performance, (performance) => performance.performance_id)
+  performanceId!: Performance[];
 }

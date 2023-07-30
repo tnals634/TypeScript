@@ -4,7 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
+  ManyToOne,
   OneToMany,
   JoinColumn,
 } from "typeorm";
@@ -15,9 +15,6 @@ import { Reserve } from "./reserve";
 export class Performance {
   @PrimaryGeneratedColumn()
   performance_id!: number;
-
-  @Column({ type: "bigint", nullable: false })
-  user_id!: number;
 
   @Column({ type: "varchar", nullable: false })
   title!: string;
@@ -33,7 +30,7 @@ export class Performance {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User, (user) => user.performanceId)
   @JoinColumn({ name: "user_id" })
   user!: User;
 
