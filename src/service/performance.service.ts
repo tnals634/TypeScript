@@ -2,7 +2,7 @@ import { User } from "../entity/user";
 import { Performance } from "../entity/performance";
 import { myDataBase } from "../dbc";
 import { UserInfo } from "../entity/userInfo";
-import { userInfo } from "os";
+import { CustomError } from "../customClass";
 
 export class PerformanceService {
   static performanceCreate = async (
@@ -18,15 +18,19 @@ export class PerformanceService {
     const user = await myDataBase
       .getRepository(User)
       .findOneBy({ user_id: user_id });
-    if (user?.group != 1) throw new Error("사장이 아니면 사용할 수 없습니다.");
+    if (user?.group != 1)
+      throw new CustomError("사장이 아니면 사용할 수 없습니다.", 403);
     else if (!title || !content || !date || !place || !seatCount || !category)
-      throw new Error("정보를 입력해주세요.");
+      throw new CustomError("정보를 입력해주세요.", 400);
 
     const findPerformance = await myDataBase
       .getRepository(Performance)
       .findOneBy({ title: title });
     if (findPerformance)
-      throw new Error(`[${findPerformance.title}] 의 제목이 이미 존재합니다.`);
+      throw new CustomError(
+        `[${findPerformance.title}] 의 제목이 이미 존재합니다.`,
+        412
+      );
     const performance = new Performance();
     performance.title = title;
     performance.content = content;
@@ -91,7 +95,7 @@ export class PerformanceService {
     const pe = await myDataBase
       .getRepository(Performance)
       .findOneBy({ performance_id: performance_id });
-    if (!pe) throw new Error("공연이 존재하지 않습니다.");
+    if (!pe) throw new CustomError("공연이 존재하지 않습니다.", 400);
 
     const performance = await myDataBase.manager.transaction(
       async (transactionalEntityManager) => {
@@ -122,24 +126,26 @@ export class PerformanceService {
     return { status: 200, message: "", result: result };
   };
 
-  static performanceSearchGet = async (search: string, category: number) => {
+  static performanceSearchGet = async (search: string, searchType: number) => {
     const performances = await myDataBase.getRepository(Performance).find();
     let result: any;
 
-    if (category == 0) {
+    if (searchType == 0) {
       result = performances.map((p) => {
         if (p.title.search(search) > -1) return p;
       });
-    } else if (category == 1) {
+    } else if (searchType == 1) {
       console.log("result");
       result = performances.map((p) => {
         if (p.content.search(search) > -1) return p;
       });
       console.log(result);
-    } else if (category == 2) {
+    } else if (searchType == 2) {
       result = performances.map((p) => {
         if (p.category.search(search) > -1) return p;
       });
+    } else {
+      throw new CustomError("해당번호의 searchType이 존재하지 않습니다.", 400);
     }
 
     const performanceSearch = await myDataBase.manager.transaction(

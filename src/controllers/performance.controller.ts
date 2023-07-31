@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { PerformanceService } from "../service";
-import { myDataBase } from "../dbc";
+import { CustomError } from "../customClass";
 
 export class PerformanceController {
   static performanceCreate = async (req: Request, res: Response) => {
@@ -23,7 +23,8 @@ export class PerformanceController {
       return res.status(status).json({ message: message });
     } catch (error) {
       console.log(error);
-      if (error) return res.status(403).json({ message: error });
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "공연 등록에 실패했습니다." });
     }
   };
@@ -35,6 +36,8 @@ export class PerformanceController {
 
       return res.status(status).json({ performances });
     } catch (error) {
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "공연 조회에 실패했습니다." });
     }
   };
@@ -46,18 +49,22 @@ export class PerformanceController {
         await PerformanceService.performanceDetailGet(Number(performance_id));
       return res.status(status).json({ performance: result });
     } catch (error) {
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "상세 조회에 실패했습니다." });
     }
   };
   static performanceSearchGet = async (req: Request, res: Response) => {
     try {
-      const { search, category } = req.body;
+      const { search, searchType } = req.body;
 
       const { status, message, performance } =
-        await PerformanceService.performanceSearchGet(search, category);
+        await PerformanceService.performanceSearchGet(search, searchType);
 
       return res.status(status).json({ performance });
     } catch (error) {
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "공연 검색에 실패했습니다." });
     }
   };

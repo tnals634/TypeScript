@@ -24,25 +24,27 @@ export class UserService {
     authCode: string
   ) => {
     if (!email || !password || !confirmPWD || !name || !phone || !group) {
-      throw new Error(
-        "이메일, 비밀번호, 비밀번호 확인, 이름, 번호, 그룹을 확인해주세요."
+      throw new CustomError(
+        "이메일, 비밀번호, 비밀번호 확인, 이름, 번호, 그룹을 확인해주세요.",
+        403
       );
     } else if (password != confirmPWD) {
-      throw new Error("비밀번호가 일치하지 않습니다.");
+      throw new CustomError("비밀번호가 일치하지 않습니다.", 412);
     }
     const isEmail = await myDataBase
       .getRepository(User)
       .findOneBy({ email: email });
     if (isEmail ? true : false) {
-      throw new Error("이미 존재하는 이메일입니다.");
+      throw new CustomError("이미 존재하는 이메일입니다.", 400);
     }
     const isEmailValid = await myDataBase
       .getRepository(IsEmailValid)
       .findOneBy({ email: email });
-    if (!isEmailValid) throw new Error("이메일을 인증해 주세요.");
+    if (!isEmailValid) throw new CustomError("이메일을 인증해 주세요.", 400);
 
     const isEmailValidauthCode = isEmailValid?.auth_code == authCode;
-    if (!isEmailValidauthCode) throw new Error("인증번호가 일치하지 않습니다.");
+    if (!isEmailValidauthCode)
+      throw new CustomError("인증번호가 일치하지 않습니다.", 412);
 
     const passwordToCrypto = crypto
       .pbkdf2Sync(password, SECRET_KEY!.toString(), 11524, 64, "sha512")
@@ -78,7 +80,8 @@ export class UserService {
     const isEmail = await myDataBase
       .getRepository(User)
       .findOneBy({ email: email });
-    if (isEmail?.email) throw new Error("이미 사용중인 이메일 입니다.");
+    if (isEmail?.email)
+      throw new CustomError("이미 사용중인 이메일 입니다.", 409);
 
     const authCode = String(Math.floor(Math.random() * 1000000)).padStart(
       6,
@@ -106,7 +109,7 @@ export class UserService {
 
   static login = async (email: string, password: string) => {
     if (!email || !password) {
-      throw new Error("check email or password");
+      throw new CustomError("check email or password", 403);
     }
     const passwordToCrypto = crypto
       .pbkdf2Sync(password, SECRET_KEY!.toString(), 11524, 64, "sha512")
@@ -115,7 +118,7 @@ export class UserService {
       .getRepository(User)
       .findOneBy({ email: email });
     if (!user || !email || !password || user.password !== passwordToCrypto) {
-      throw new Error("이메일 또는 비밀번호를 입력해주세요");
+      throw new CustomError("이메일 또는 비밀번호를 입력해주세요", 400);
     }
     //jwt 토큰
     const existRefreshToken = await myDataBase
@@ -204,12 +207,12 @@ export class UserService {
     const user = await myDataBase
       .getRepository(User)
       .findOneBy({ user_id: user_id });
-    if (!user) throw new Error("회원정보가 존재하지 않습니다.");
+    if (!user) throw new CustomError("회원정보가 존재하지 않습니다.", 403);
 
     const existToken = await myDataBase
       .getRepository(Token)
       .findOneBy({ user_id: user_id });
-    if (!existToken) throw new Error("로그인이 되어있지 않습니다.");
+    if (!existToken) throw new CustomError("로그인이 되어있지 않습니다.", 403);
 
     await myDataBase.getRepository(Token).delete({ user_id: user_id });
 

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "../service";
+import { CustomError } from "../customClass";
 export class UserController {
   static createUser = async (req: Request, res: Response) => {
     try {
@@ -17,7 +18,8 @@ export class UserController {
       res.status(status).json({ message, result });
     } catch (error) {
       console.log(error);
-      if (error) return res.status(403).json({ message: error });
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "회원가입에 실패하였습니다." });
     }
   };
@@ -34,16 +36,20 @@ export class UserController {
 
       return res.status(status).json({ message });
     } catch (error) {
-      if (error) {
-        const { email, password } = req.body;
-        const { status, message, result } = await UserService.loginError(
-          email,
-          password
-        );
-        res.clearCookie("accessToken");
-        res.cookie("accessToken", `Bearer ${result}`);
-        return res.status(status).json({ message: message });
+      if (error instanceof Error) {
+        if (error.name == "TokenExpiredError") {
+          const { email, password } = req.body;
+          const { status, message, result } = await UserService.loginError(
+            email,
+            password
+          );
+          res.clearCookie("accessToken");
+          res.cookie("accessToken", `Bearer ${result}`);
+          return res.status(status).json({ message: message });
+        }
       }
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "회원가입에 실패하였습니다." });
     }
   };
@@ -58,7 +64,8 @@ export class UserController {
       return res.status(status).json({ message, result });
     } catch (error) {
       console.error(error);
-      if (error) return res.status(403).json({ message: error });
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "오류가 발생하였습니다." });
     }
   };
@@ -71,7 +78,8 @@ export class UserController {
       res.status(status).json({ result });
     } catch (error) {
       console.error(error);
-      if (error) return res.status(403).json({ message: error });
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "오류가 발생하였습니다." });
     }
   };
@@ -83,6 +91,11 @@ export class UserController {
       res.clearCookie("accessToken");
       res.clearCookie("refreshToken");
       res.status(status).json({ message: message });
-    } catch (error) {}
+    } catch (error) {
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
+
+      return res.status(500).json({ message: "오류가 발생하였습니다." });
+    }
   };
 }
