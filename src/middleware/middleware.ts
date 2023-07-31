@@ -26,7 +26,7 @@ export class authMiddleware {
         !accessAuthToken &&
         !existRefreshToken
       ) {
-        res.status(401).json({
+        res.status(403).json({
           errorMessage: "로그인 후에 이용할 수 있는 기능입니다.",
         });
         return;
@@ -52,7 +52,7 @@ export class authMiddleware {
         if (!user) {
           res.clearCookie("accessToken");
           return res
-            .status(401)
+            .status(403)
             .json({ errorMessage: "토큰 사용자가 존재하지 않습니다." });
         }
 
@@ -70,7 +70,7 @@ export class authMiddleware {
           if (!user) {
             res.clearCookie("accessToken");
             return res
-              .status(401)
+              .status(403)
               .json({ errorMessage: "토큰 사용자가 존재하지 않습니다." });
           }
           res.locals.user = user;
@@ -99,7 +99,7 @@ export class authMiddleware {
             if (!user) {
               res.clearCookie("accessToken");
               res
-                .status(401)
+                .status(403)
                 .json({ errorMessage: "토큰 사용자가 존재하지 않습니다." });
             }
 
@@ -119,7 +119,7 @@ export class authMiddleware {
             .getRepository(Token)
             .delete({ user_id: existRefreshToken.user_id });
 
-        res.status(401).json({
+        res.status(403).json({
           errorMessage: "토큰이 만료된 아이디입니다. 다시 로그인 해주세요.",
         });
         return;
@@ -128,7 +128,7 @@ export class authMiddleware {
         // 그 밖의 알수 없는 오류가 발생했을 때는 전부 삭제가 되도록 함
         res.clearCookie("accessToken");
         await myDataBase.getRepository(Token).delete({});
-        res.status(401).json({
+        res.status(403).json({
           errorMessage:
             "전달된 쿠키에서 오류가 발생하였습니다. 모든 쿠키를 삭제합니다.",
         });

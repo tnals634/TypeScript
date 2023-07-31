@@ -188,9 +188,13 @@ export class UserService {
           .findOneBy({ user_info_id: user_id });
         const point = await transactionalEntityManager
           .getRepository(Point)
-          .findOneBy({ user_info_id: user_id });
-
-        return { user, userInfo, point };
+          .find({ where: { user_info_id: user_id } });
+        let p = 0;
+        for (let i of point) {
+          if (i.point_status == 0) p = p - Number(i.point);
+          else if (i.point_status == 1) p = p + Number(i.point);
+        }
+        return { user, userInfo, p };
       }
     );
     const payload = {
@@ -198,7 +202,7 @@ export class UserService {
       group: result.user?.group,
       name: result.userInfo?.name,
       phone: result.userInfo?.phone,
-      point: result.point?.point,
+      point: result.p,
     };
     return { status: 200, message: "", result: payload };
   };
