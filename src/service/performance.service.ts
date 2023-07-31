@@ -9,14 +9,18 @@ export class PerformanceService {
     user_id: number,
     title: string,
     content: string,
-    price: number
+    date: string,
+    place: string,
+    seatCount: number,
+    image: string,
+    category: string
   ) => {
     const user = await myDataBase
       .getRepository(User)
       .findOneBy({ user_id: user_id });
     if (user?.group != 1) throw new Error("사장이 아니면 사용할 수 없습니다.");
-    else if (!title || !content || !price)
-      throw new Error("값을 입력해주세요.");
+    else if (!title || !content || !date || !place || !seatCount || !category)
+      throw new Error("정보를 입력해주세요.");
 
     const findPerformance = await myDataBase
       .getRepository(Performance)
@@ -26,7 +30,11 @@ export class PerformanceService {
     const performance = new Performance();
     performance.title = title;
     performance.content = content;
-    performance.price = price;
+    performance.date = date;
+    performance.place = place;
+    performance.seatCount = seatCount;
+    performance.category = category;
+    performance.image = image ? image : "../../img/cat.jpg";
     performance.user = user;
 
     await myDataBase.getRepository(Performance).insert(performance);
@@ -60,13 +68,20 @@ export class PerformanceService {
       return b.performance.createdAt - a.performance.createdAt;
     });
     const result = performances.map((p: any) => {
+      let check = false;
+      if (p.performance.seatCount > 0) check = true;
       return {
         performanceId: p.performance.performance_id,
         userId: p.userInfo.user_info_id,
+        image: p.performance.image,
+        category: p.performance.category,
         director: p.userInfo.name,
         title: p.performance.title,
-        price: p.performance.price,
-        createdAt: p.performance.createdAt,
+        seat: p.performance.seatCount,
+        place: p.performance.place,
+        reservationAvailability: check,
+        price: 30000,
+        date: JSON.parse(p.performance.date),
       };
     });
     return { status: 200, message: "", performances: result };
@@ -89,14 +104,20 @@ export class PerformanceService {
         return { p, user };
       }
     );
+    let check = false;
+    if (performance.p?.seatCount! > 0) check = true;
     const result = {
       performanceId: performance.p?.performance_id,
       userId: performance.user?.user_info_id,
+      image: performance.p?.image,
+      category: performance.p?.category,
       director: performance.user?.name,
       title: performance.p?.title,
       content: performance.p?.content,
-      price: performance.p?.price,
-      createdAt: performance.p?.createdAt,
+      seat: performance.p?.seatCount,
+      reservationAvailability: check,
+      price: 30000,
+      date: JSON.parse(performance.p?.date!),
     };
     return { status: 200, message: "", result: result };
   };
@@ -109,14 +130,53 @@ export class PerformanceService {
       result = performances.map((p) => {
         if (p.title.search(search) > -1) return p;
       });
-      console.log(result);
     } else if (category == 1) {
       console.log("result");
       result = performances.map((p) => {
         if (p.content.search(search) > -1) return p;
       });
       console.log(result);
+    } else if (category == 2) {
+      result = performances.map((p) => {
+        if (p.category.search(search) > -1) return p;
+      });
     }
-    return { status: 200, message: "", performance: result };
+
+    const performanceSearch = await myDataBase.manager.transaction(
+      async (transactionalEntityManager) => {
+        let allInfos: any = [];
+        for (let i in result) {
+          const userInfo = await transactionalEntityManager
+            .getRepository(UserInfo)
+            .findOneBy({ user: result[i].user });
+
+          const performanceInfo = await transactionalEntityManager
+            .getRepository(Performance)
+            .findOneBy({ title: result[i].title });
+
+          allInfos[i] = { userInfo: userInfo, performance: performanceInfo };
+        }
+        return allInfos;
+      }
+    );
+
+    const payload = performanceSearch.map((p: any) => {
+      let check = false;
+      if (p.performance.seatCount > 0) check = true;
+      return {
+        performanceId: p.performance.performance_id,
+        userId: p.userInfo.user_info_id,
+        image: p.performance.image,
+        category: p.performance.category,
+        director: p.userInfo.name,
+        title: p.performance.title,
+        seat: p.performance.seatCount,
+        place: p.performance.place,
+        reservationAvailability: check,
+        price: 30000,
+        date: JSON.parse(p.performance.date),
+      };
+    });
+    return { status: 200, message: "", performance: payload };
   };
 }

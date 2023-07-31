@@ -4,15 +4,21 @@ import { myDataBase } from "../dbc";
 
 export class PerformanceController {
   static performanceCreate = async (req: Request, res: Response) => {
-    const { title, content, price } = req.body;
+    const { title, content, date, time, place, seatCount, image, category } =
+      req.body;
     const user_id = res.locals.user.user_id;
     try {
+      const dateAndTime = JSON.stringify([date, time]);
       const { status, message, result } =
         await PerformanceService.performanceCreate(
           user_id,
           title,
           content,
-          price
+          dateAndTime,
+          place,
+          seatCount,
+          image,
+          category
         );
       return res.status(status).json({ message: message });
     } catch (error) {
@@ -46,6 +52,7 @@ export class PerformanceController {
   static performanceSearchGet = async (req: Request, res: Response) => {
     try {
       const { search, category } = req.body;
+
       const { status, message, performance } =
         await PerformanceService.performanceSearchGet(search, category);
 

@@ -21,6 +21,9 @@ export class UserInfo {
   name!: string;
 
   @Column({ type: "varchar", nullable: false })
+  nickname!: string;
+
+  @Column({ type: "varchar", nullable: false })
   phone!: string;
 
   @CreateDateColumn({ name: "created_at" })

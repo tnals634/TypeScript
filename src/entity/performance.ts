@@ -22,8 +22,20 @@ export class Performance {
   @Column({ type: "varchar", nullable: false })
   content!: string;
 
-  @Column({ type: "bigint", nullable: false })
-  price!: number;
+  @Column({ type: "varchar", nullable: false })
+  date!: string;
+
+  @Column({ type: "varchar", nullable: false })
+  place!: string;
+
+  @Column({ type: "int", nullable: false })
+  seatCount!: number;
+
+  @Column({ type: "varchar", nullable: false })
+  image!: string;
+
+  @Column({ type: "varchar", nullable: false })
+  category!: string;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;

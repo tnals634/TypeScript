@@ -124,7 +124,7 @@ export class UserService {
     const secretKey: string = JWT_KEY || "jwt_secret_key";
     if (!existRefreshToken) {
       const accessToken = jwt.sign({ user_id: user.user_id }, secretKey, {
-        expiresIn: "1m",
+        expiresIn: "1h",
       });
       const refreshToken = jwt.sign({}, secretKey, { expiresIn: "7d" });
 
@@ -147,7 +147,7 @@ export class UserService {
     await myDataBase.getRepository(Token).insert(tokenObject);
 
     const accessToken = jwt.sign({ user_id: user.user_id }, secretKey, {
-      expiresIn: "1m",
+      expiresIn: "1h",
     });
     const token = {
       accessToken: accessToken,
@@ -163,7 +163,7 @@ export class UserService {
     const secretKey: string = JWT_KEY || "jwt_secret_key";
     const refreshToken = jwt.sign({}, secretKey, { expiresIn: "7d" });
     const accessToken = jwt.sign({ user_id: user?.user_id }, secretKey, {
-      expiresIn: "1m",
+      expiresIn: "1h",
     });
 
     await myDataBase.getRepository(Token).delete({ user_id: user?.user_id });

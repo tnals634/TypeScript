@@ -10,7 +10,7 @@ export const myDataBase = new DataSource({
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
   entities: ["src/entity/*.ts"],
-  // entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  // entities: ["dist/entity/*.js"],
   // logging: true,
   // synchronize: true,
 });

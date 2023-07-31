@@ -13,5 +13,5 @@ router.get(
   "/performance/:performance_id",
   PerformanceController.performanceDetailGet
 );
-router.get("/performance/search", PerformanceController.performanceSearchGet);
+router.post("/performance/search", PerformanceController.performanceSearchGet);
 export default router;

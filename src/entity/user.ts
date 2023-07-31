@@ -21,6 +21,7 @@ export class User {
 
   @Column({ type: "tinyint", nullable: false })
   group!: number;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
   @UpdateDateColumn({ name: "updated_at" })
