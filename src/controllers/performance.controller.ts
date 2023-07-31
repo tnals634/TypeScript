@@ -42,6 +42,19 @@ export class PerformanceController {
     }
   };
 
+  static performanceTitleGet = async (req: Request, res: Response) => {
+    try {
+      const { status, message, performances } =
+        await PerformanceService.performanceTitleGet();
+
+      return res.status(status).json({ performances });
+    } catch (error) {
+      if (error instanceof CustomError)
+        return res.status(error.status).json({ message: error.message });
+      return res.status(500).json({ message: "공연 조회에 실패했습니다." });
+    }
+  };
+
   static performanceDetailGet = async (req: Request, res: Response) => {
     try {
       const { performance_id } = req.params;

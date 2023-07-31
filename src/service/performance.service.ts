@@ -72,8 +72,6 @@ export class PerformanceService {
       return b.performance.createdAt - a.performance.createdAt;
     });
     const result = performances.map((p: any) => {
-      let check = false;
-      if (p.performance.seatCount > 0) check = true;
       return {
         performanceId: p.performance.performance_id,
         userId: p.userInfo.user_info_id,
@@ -81,9 +79,45 @@ export class PerformanceService {
         category: p.performance.category,
         director: p.userInfo.name,
         title: p.performance.title,
-        seat: p.performance.seatCount,
         place: p.performance.place,
-        reservationAvailability: check,
+        price: 30000,
+        date: JSON.parse(p.performance.date),
+      };
+    });
+    return { status: 200, message: "", performances: result };
+  };
+
+  static performanceTitleGet = async () => {
+    const performances = await myDataBase.manager.transaction(
+      async (transactionalEntityManager) => {
+        const performance = await myDataBase.getRepository(Performance).find();
+        let allInfos: any = [];
+        for (let i in performance) {
+          const userInfo = await transactionalEntityManager
+            .getRepository(UserInfo)
+            .findOneBy({ user: performance[i].user });
+
+          const performanceInfo = await transactionalEntityManager
+            .getRepository(Performance)
+            .findOneBy({ title: performance[i].title });
+
+          allInfos[i] = { userInfo: userInfo, performance: performanceInfo };
+        }
+        return allInfos;
+      }
+    );
+    performances.sort((a: any, b: any) => {
+      return a.performance.title - b.performance.title;
+    });
+    const result = performances.map((p: any) => {
+      return {
+        performanceId: p.performance.performance_id,
+        userId: p.userInfo.user_info_id,
+        image: p.performance.image,
+        category: p.performance.category,
+        director: p.userInfo.name,
+        title: p.performance.title,
+        place: p.performance.place,
         price: 30000,
         date: JSON.parse(p.performance.date),
       };
@@ -167,8 +201,6 @@ export class PerformanceService {
     );
 
     const payload = performanceSearch.map((p: any) => {
-      let check = false;
-      if (p.performance.seatCount > 0) check = true;
       return {
         performanceId: p.performance.performance_id,
         userId: p.userInfo.user_info_id,
@@ -176,9 +208,7 @@ export class PerformanceService {
         category: p.performance.category,
         director: p.userInfo.name,
         title: p.performance.title,
-        seat: p.performance.seatCount,
         place: p.performance.place,
-        reservationAvailability: check,
         price: 30000,
         date: JSON.parse(p.performance.date),
       };

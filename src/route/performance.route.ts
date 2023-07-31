@@ -9,6 +9,7 @@ router.post(
   PerformanceController.performanceCreate
 );
 router.get("/performance", PerformanceController.performanceGet);
+router.get("/performanceTitle", PerformanceController.performanceTitleGet);
 router.get(
   "/performance/:performance_id",
   PerformanceController.performanceDetailGet
