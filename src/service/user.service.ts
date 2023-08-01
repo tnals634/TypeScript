@@ -14,6 +14,7 @@ const { JWT_KEY, SECRET_KEY } = process.env;
 
 dotenv.config();
 export class UserService {
+  /** 회원 가입 */
   static signup = async (
     email: string,
     password: string,
@@ -31,25 +32,32 @@ export class UserService {
     } else if (password != confirmPWD) {
       throw new CustomError("비밀번호가 일치하지 않습니다.", 412);
     }
+
+    // 입력한 이메일이 있나 조회
     const isEmail = await myDataBase
       .getRepository(User)
       .findOneBy({ email: email });
     if (isEmail ? true : false) {
       throw new CustomError("이미 존재하는 이메일입니다.", 400);
     }
+
+    // 인증한적이 있나 조회
     const isEmailValid = await myDataBase
       .getRepository(IsEmailValid)
       .findOneBy({ email: email });
     if (!isEmailValid) throw new CustomError("이메일을 인증해 주세요.", 400);
 
+    // 보낸 코드와 입력한 코드가 일치한지 조회
     const isEmailValidauthCode = isEmailValid?.auth_code == authCode;
     if (!isEmailValidauthCode)
       throw new CustomError("인증번호가 일치하지 않습니다.", 412);
 
+    // 비밀번호 암호화
     const passwordToCrypto = crypto
       .pbkdf2Sync(password, SECRET_KEY!.toString(), 11524, 64, "sha512")
       .toString("hex");
 
+    // user, userInfo, point transaction
     const user = new User();
     user.email = email;
     user.password = passwordToCrypto;
@@ -76,6 +84,7 @@ export class UserService {
     return { message: "회원가입에 성공하였습니다.", status: 201, result };
   };
 
+  /** 이메일 인증 */
   static isEmailValidCheck = async (email: string) => {
     const isEmail = await myDataBase
       .getRepository(User)
@@ -107,13 +116,17 @@ export class UserService {
     };
   };
 
+  /** 로그인 */
   static login = async (email: string, password: string) => {
     if (!email || !password) {
       throw new CustomError("check email or password", 403);
     }
+
+    // 입력한 비밀번호 암호화
     const passwordToCrypto = crypto
       .pbkdf2Sync(password, SECRET_KEY!.toString(), 11524, 64, "sha512")
       .toString("hex");
+
     const user = await myDataBase
       .getRepository(User)
       .findOneBy({ email: email });
@@ -121,10 +134,14 @@ export class UserService {
       throw new CustomError("이메일 또는 비밀번호를 입력해주세요", 400);
     }
     //jwt 토큰
+    //현재 유저의 리프레시토큰이 존재하는지 확인
     const existRefreshToken = await myDataBase
       .getRepository(Token)
       .findOneBy({ user_id: user.user_id });
-    const secretKey: string = JWT_KEY || "jwt_secret_key";
+    //jwt 비밀번호
+    const secretKey: string = JWT_KEY!;
+
+    //저장된 리프레시토큰이 존재하지 않을 경우
     if (!existRefreshToken) {
       const accessToken = jwt.sign({ user_id: user.user_id }, secretKey, {
         expiresIn: "1h",
@@ -142,6 +159,8 @@ export class UserService {
         result: token,
       };
     }
+
+    //리프레시 토큰이 존재할 경우
     jwt.verify(existRefreshToken.refreshToken, secretKey);
     await myDataBase.getRepository(Token).delete({ user_id: user.user_id });
     const tokenObject = new Token();
@@ -159,11 +178,12 @@ export class UserService {
     return { status: 200, message: "로그인하였습니다.", result: token };
   };
 
+  /** 리프레시토큰이 만료했을경우 */
   static loginError = async (email: string, password: string) => {
     const user = await myDataBase
       .getRepository(User)
       .findOneBy({ email: email });
-    const secretKey: string = JWT_KEY || "jwt_secret_key";
+    const secretKey: string = JWT_KEY!;
     const refreshToken = jwt.sign({}, secretKey, { expiresIn: "7d" });
     const accessToken = jwt.sign({ user_id: user?.user_id }, secretKey, {
       expiresIn: "1h",
@@ -177,6 +197,7 @@ export class UserService {
     return { status: 200, message: "로그인하였습니다.", result: accessToken };
   };
 
+  /** 프로필 조회 */
   static getProfile = async (user_id: number) => {
     const result = await myDataBase.manager.transaction(
       async (transactionalEntityManager) => {
@@ -207,6 +228,7 @@ export class UserService {
     return { status: 200, message: "", result: payload };
   };
 
+  /** 로그아웃 */
   static logout = async (user_id: number) => {
     const user = await myDataBase
       .getRepository(User)

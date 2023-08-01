@@ -5,7 +5,7 @@ export class ReserveController {
   static createReserve = async (req: Request, res: Response) => {
     try {
       const { reserveCount } = req.body;
-      const { user_id } = res.locals.user;
+      const user_id = res.locals.user.user_id;
       const { performance_id } = req.params;
       const { status, message, result } =
         await ReserveService.PerformanceReservation(
@@ -24,7 +24,7 @@ export class ReserveController {
 
   static getReserve = async (req: Request, res: Response) => {
     try {
-      const { user_id } = res.locals.user;
+      const user_id = res.locals.user.user_id;
       const { status, message, result } = await ReserveService.reservationGet(
         user_id
       );

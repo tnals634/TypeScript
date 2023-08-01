@@ -5,6 +5,7 @@ import { UserInfo } from "../entity/userInfo";
 import { CustomError } from "../customClass";
 
 export class PerformanceService {
+  /** 공연 등록 */
   static performanceCreate = async (
     user_id: number,
     title: string,
@@ -49,6 +50,7 @@ export class PerformanceService {
     };
   };
 
+  /** 공연 목록 조회 */
   static performanceGet = async () => {
     const performances = await myDataBase.manager.transaction(
       async (transactionalEntityManager) => {
@@ -87,6 +89,7 @@ export class PerformanceService {
     return { status: 200, message: "", performances: result };
   };
 
+  /** 공연 제목순 조회 */
   static performanceTitleGet = async () => {
     const performances = await myDataBase.manager.transaction(
       async (transactionalEntityManager) => {
@@ -125,6 +128,7 @@ export class PerformanceService {
     return { status: 200, message: "", performances: result };
   };
 
+  /** 공연 상세 조회 */
   static performanceDetailGet = async (performance_id: number) => {
     const pe = await myDataBase
       .getRepository(Performance)
@@ -160,6 +164,7 @@ export class PerformanceService {
     return { status: 200, message: "", result: result };
   };
 
+  /** 공연 검색 */
   static performanceSearchGet = async (search: string, searchType: number) => {
     const performances = await myDataBase.getRepository(Performance).find();
     let result: any;
