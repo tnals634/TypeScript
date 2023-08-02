@@ -1,0 +1,98 @@
+{
+    "user":{
+        "email": {
+            "string.base": "이메일은 문자열이어야 합니다.",
+            "any.required": "이메일을 입력해 주세요.",
+            "string.pattern.base": "이메일 형식이 올바르지 않습니다.",
+            "string.max": "이메일은 최대 40자 이내로 입력해 주세요.",
+            "string.empty": "이메일을 입력해 주세요."
+        },
+        "nickname": {
+            "string.base": "닉네임은 문자열이어야 합니다.",
+            "any.required": "닉네임을 입력해 주세요.",
+            "string.pattern.base": "닉네임은 한글, 영문, 숫자만 입력이 가능합니다.",
+            "string.empty": "닉네임을 입력해 주세요.",
+            "string.max": "닉네임은 최대 15자 이내로 입력해 주세요.",
+            "string.min": "닉네임은 최소 2자 이상 입력해 주세요."
+        },
+        "password": {
+            "string.base": "패스워드는 문자열이어야 합니다.",
+            "any.required": "패스워드를 입력해 주세요.",
+            "string.pattern.base": "패스워드는 최소 1가지 이상 영문, 숫자, 특수문자를 조합해 주세요.",
+            "string.min": "패스워드는 최소 8자 이상 입력해 주세요.",
+            "string.max": "패스워드는 최대 20자 이내로 입력해 주세요.",
+            "string.empty": "패스워드를 입력해 주세요."
+        },
+        "confirmPassword": {
+            "string.base": "확인 패스워드는 문자열이어야 합니다.",
+            "any.required": "확인 패스워드를 입력해 주세요.",
+            "any.only": "패스워드와 확인 패스워드가 일치하지 않습니다."
+        },
+        "name": {
+            "string.base": "이름은 문자열이어야 합니다.",
+            "any.required": "이름을 입력해 주세요.",
+            "string.empty": "이름을 입력해 주세요.",
+            "string.pattern.base": "이름은 한글 또는 영문만 입력이 가능합니다.",
+            "string.min": "이름은 최소 2자 이상 입력해 주세요.",
+            "string.max": "이름은 최대 10자 이내로 입력해 주세요."
+        },
+        "phone": {
+            "string.base": "연락처는 문자열이어야 합니다.",
+            "any.required": "연락처를 입력해 주세요.",
+            "string.empty": "연락처를 입력해 주세요.",
+            "string.pattern.base": "연락처의 형식이 올바르지 않습니다.",
+            "string.min": "연락처는 '-' 하이픈 포함 최소 11자 이상 입력해 주세요.",
+            "string.max": "연락처는 '-' 하이픈 포함 최대 15자 이내로 입력해 주세요."
+        },
+        "authCode": {
+            "string.base": "인증 번호는 문자열이어야 합니다.",
+            "any.required": "인증 번호를 입력해 주세요.",
+            "string.empty": "인증 번호를 입력해 주세요.",
+            "string.pattern.base": "인증 번호의 형식이 올바르지 않습니다.",
+            "string.max": "인증 번호는 6자로 입력해 주세요."
+        }
+    },
+    "performance": {
+        "title":{
+            "string.base": "공연 타이틀은 문자열이어야 합니다.",
+            "any.required": "공연 타이틀을 입력해 주세요.",
+            "string.pattern.base": "공연 타이틀 형식이 올바르지 않습니다.",
+            "string.max": "공연 타이틀은 최대 40자 이내로 입력해 주세요.",
+            "string.empty": "공연 타이틀을 입력해 주세요."
+        },
+        "content": {
+            "string.base": "공연 설명은 문자열이어야 합니다.",
+            "any.required": "공연 설명을 입력해 주세요.",
+            "string.pattern.base": "공연 설명 형식이 올바르지 않습니다.",
+            "string.max": "공연 설명은 최대 200자 이내로 입력해 주세요.",
+            "string.empty": "공연 설명을 입력해 주세요."
+        },
+        "category": {
+            "string.base": "카테고리는 문자열이어야 합니다.",
+            "any.required": "카테고리를 입력해 주세요.",
+            "string.pattern.base": "카테고리 형식이 올바르지 않습니다.",
+            "string.max": "카테고리는 최대 40자 이내로 입력해 주세요.",
+            "string.empty": "카테고리를 입력해 주세요."
+        },
+        "place": {
+            "string.base": "장소는 문자열이어야 합니다.",
+            "any.required": "장소를 입력해 주세요.",
+            "string.pattern.base": "장소 형식이 올바르지 않습니다.",
+            "string.max": "장소는 최대 40자 이내로 입력해 주세요.",
+            "string.empty": "장소를 입력해 주세요."
+        },
+        "seatCount": {
+            "string.base": "좌석 수는 숫자열이어야 합니다.",
+            "any.required": "좌석 수를 입력해 주세요.",
+            "string.empty": "좌석 수를 입력해 주세요."
+        },
+        "date" :{
+            "string.base": "날짜는 문자열이어야 합니다.",
+            "any.required": "날짜를 입력해 주세요.",
+            "string.pattern.base": "날짜 형식이 올바르지 않습니다.",
+            "string.max": "날짜는 최대 40자 이내로 입력해 주세요.",
+            "string.empty": "날짜를 입력해 주세요."
+        }
+
+    }
+}
