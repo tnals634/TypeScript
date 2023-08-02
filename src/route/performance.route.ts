@@ -1,11 +1,13 @@
 import express from "express";
 import { PerformanceController } from "../controllers/performance.controller";
 import { authMiddleware } from "../middleware/middleware";
+import upload from "../middleware/imageUpload";
 
 const router = express.Router();
 router.post(
   "/performance",
   authMiddleware.allAuthMiddleware,
+  upload.single("image"),
   PerformanceController.performanceCreate
 );
 router.get("/performance", PerformanceController.performanceGet);

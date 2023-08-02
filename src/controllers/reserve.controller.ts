@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ReserveService } from "../service/reserve.service";
 import { CustomError } from "../customClass";
 export class ReserveController {
+  /** 예매 등록 */
   static createReserve = async (req: Request, res: Response) => {
     try {
       const { reserveCount } = req.body;
@@ -22,6 +23,7 @@ export class ReserveController {
     }
   };
 
+  /** 예매 조회 */
   static getReserve = async (req: Request, res: Response) => {
     try {
       const user_id = res.locals.user.user_id;

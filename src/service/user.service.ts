@@ -209,12 +209,13 @@ export class UserService {
           .findOneBy({ user_info_id: user_id });
         const point = await transactionalEntityManager
           .getRepository(Point)
-          .find({ where: { user_info_id: user_id } });
+          .findBy({ user_info_id: userInfo?.user_info_id });
         let p = 0;
         for (let i of point) {
           if (i.point_status == 0) p = p - Number(i.point);
           else if (i.point_status == 1) p = p + Number(i.point);
         }
+
         return { user, userInfo, p };
       }
     );

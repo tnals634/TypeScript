@@ -77,7 +77,7 @@ export class PerformanceService {
       return {
         performanceId: p.performance.performance_id,
         userId: p.userInfo.user_info_id,
-        image: p.performance.image,
+        image: JSON.parse(p.performance.image),
         category: p.performance.category,
         director: p.userInfo.name,
         title: p.performance.title,
@@ -116,7 +116,7 @@ export class PerformanceService {
       return {
         performanceId: p.performance.performance_id,
         userId: p.userInfo.user_info_id,
-        image: p.performance.image,
+        image: JSON.parse(p.performance.image),
         category: p.performance.category,
         director: p.userInfo.name,
         title: p.performance.title,
@@ -151,7 +151,7 @@ export class PerformanceService {
     const result = {
       performanceId: performance.p?.performance_id,
       userId: performance.user?.user_info_id,
-      image: performance.p?.image,
+      image: JSON.parse(performance.p?.image!),
       category: performance.p?.category,
       director: performance.user?.name,
       title: performance.p?.title,
@@ -209,7 +209,7 @@ export class PerformanceService {
       return {
         performanceId: p.performance.performance_id,
         userId: p.userInfo.user_info_id,
-        image: p.performance.image,
+        image: JSON.parse(p.performance.image),
         category: p.performance.category,
         director: p.userInfo.name,
         title: p.performance.title,

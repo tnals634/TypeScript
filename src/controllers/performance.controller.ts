@@ -3,10 +3,11 @@ import { PerformanceService } from "../service";
 import { CustomError } from "../customClass";
 
 export class PerformanceController {
+  /** 공연 등록 */
   static performanceCreate = async (req: Request, res: Response) => {
-    const { title, content, date, time, place, seatCount, image, category } =
-      req.body;
-    const user_id = res.locals.user.user_id;
+    const image = req.file ? req.file : null;
+    const { title, content, date, time, place, seatCount, category } = req.body;
+    const { user_id } = res.locals.user;
     try {
       const dateAndTime = JSON.stringify([date, time]);
       const { status, message, result } =
@@ -17,7 +18,7 @@ export class PerformanceController {
           dateAndTime,
           place,
           seatCount,
-          image,
+          JSON.stringify(image),
           category
         );
       return res.status(status).json({ message: message });
@@ -29,6 +30,7 @@ export class PerformanceController {
     }
   };
 
+  /** 공연 조회 */
   static performanceGet = async (req: Request, res: Response) => {
     try {
       const { status, message, performances } =
@@ -42,6 +44,7 @@ export class PerformanceController {
     }
   };
 
+  /** 공연 제목순 조회 */
   static performanceTitleGet = async (req: Request, res: Response) => {
     try {
       const { status, message, performances } =
@@ -55,6 +58,7 @@ export class PerformanceController {
     }
   };
 
+  /** 공연 상세 조회 */
   static performanceDetailGet = async (req: Request, res: Response) => {
     try {
       const { performance_id } = req.params;
@@ -67,6 +71,8 @@ export class PerformanceController {
       return res.status(500).json({ message: "상세 조회에 실패했습니다." });
     }
   };
+
+  /** 공연 검색 조회 */
   static performanceSearchGet = async (req: Request, res: Response) => {
     try {
       const { search, searchType } = req.body;

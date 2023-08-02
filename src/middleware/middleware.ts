@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import { myDataBase } from "../dbc";
 dotenv.config();
 const { JWT_KEY } = process.env;
-const secretKey: string = JWT_KEY || "jwt_secret_key";
+const secretKey: string = JWT_KEY!;
 
 export class authMiddleware {
   static allAuthMiddleware = async (
