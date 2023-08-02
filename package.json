@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --exec ts-node src/app.ts",
-    "build": "tsc"
-  },
+    "start": "tsc && node ./dist/app.js",
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
