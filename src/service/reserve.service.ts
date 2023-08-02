@@ -20,6 +20,9 @@ export class ReserveService {
     if (!userReserveCheck)
       throw new CustomError("예매하신 내역이 존재하지 않습니다.", 400);
 
+    userReserveCheck.sort((a: any, b: any) => {
+      return b.createdAt - a.createdAt;
+    });
     // performance, userInfo, reserve 트랜잭션
     const transaction = await myDataBase.manager.transaction(
       async (transactionalEntityManager) => {
