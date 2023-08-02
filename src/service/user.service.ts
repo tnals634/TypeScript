@@ -9,7 +9,6 @@ import { emailCheck } from "../mail";
 import { Token } from "../entity/token";
 import crypto from "crypto";
 import { CustomError } from "../customClass";
-import e from "express";
 const { JWT_KEY, SECRET_KEY } = process.env;
 
 dotenv.config();
@@ -20,13 +19,14 @@ export class UserService {
     password: string,
     confirmPWD: string,
     name: string,
+    nickname: string,
     phone: string,
-    group: number,
+    is_admin: boolean,
     authCode: string
   ) => {
-    if (!email || !password || !confirmPWD || !name || !phone || !group) {
+    if (!email || !password || !confirmPWD || !name || !nickname || !phone) {
       throw new CustomError(
-        "이메일, 비밀번호, 비밀번호 확인, 이름, 번호, 그룹을 확인해주세요.",
+        "이메일, 비밀번호, 비밀번호 확인, 이름, 닉네임, 번호, 그룹을 확인해주세요.",
         403
       );
     } else if (password != confirmPWD) {
@@ -61,9 +61,10 @@ export class UserService {
     const user = new User();
     user.email = email;
     user.password = passwordToCrypto;
-    user.group = group;
+    user.is_admin = is_admin;
     const userInfo = new UserInfo();
     userInfo.name = name;
+    userInfo.nickname = nickname;
     userInfo.phone = phone;
     userInfo.user = user;
     const point = new Point();
@@ -207,9 +208,13 @@ export class UserService {
         const userInfo = await transactionalEntityManager
           .getRepository(UserInfo)
           .findOneBy({ user_info_id: user_id });
-        const point = await transactionalEntityManager
+        let point = await transactionalEntityManager
           .getRepository(Point)
-          .findBy({ user_info_id: userInfo?.user_info_id });
+          .find({ relations: ["userInfo"] });
+
+        point = point.filter(
+          (a) => a.userInfo.user_info_id == userInfo?.user_info_id
+        );
         let p = 0;
         for (let i of point) {
           if (i.point_status == 0) p = p - Number(i.point);
@@ -221,8 +226,9 @@ export class UserService {
     );
     const payload = {
       user_id: result.user?.user_id,
-      group: result.user?.group,
+      isAdmin: result.user?.is_admin,
       name: result.userInfo?.name,
+      nickname: result.userInfo?.nickname,
       phone: result.userInfo?.phone,
       point: result.p,
     };

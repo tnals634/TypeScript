@@ -22,7 +22,7 @@ export class emailCheck {
     });
 
     await transporter.sendMail({
-      from: `toyDeliveryWeb <${MAIL_ID}>`,
+      from: `typescript <${MAIL_ID}>`,
       to: email,
       subject: title,
       html: body,

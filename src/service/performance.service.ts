@@ -19,14 +19,15 @@ export class PerformanceService {
     const user = await myDataBase
       .getRepository(User)
       .findOneBy({ user_id: user_id });
-    if (user?.group != 1)
+    if (!user?.is_admin)
       throw new CustomError("사장이 아니면 사용할 수 없습니다.", 403);
     else if (!title || !content || !date || !place || !seatCount || !category)
       throw new CustomError("정보를 입력해주세요.", 400);
 
     const findPerformance = await myDataBase
       .getRepository(Performance)
-      .findOneBy({ title: title });
+      .findOne({ where: { title: title }, relations: ["user"] });
+
     if (findPerformance)
       throw new CustomError(
         `[${findPerformance.title}] 의 제목이 이미 존재합니다.`,
@@ -174,11 +175,9 @@ export class PerformanceService {
         if (p.title.search(search) > -1) return p;
       });
     } else if (searchType == 1) {
-      console.log("result");
       result = performances.map((p) => {
         if (p.content.search(search) > -1) return p;
       });
-      console.log(result);
     } else if (searchType == 2) {
       result = performances.map((p) => {
         if (p.category.search(search) > -1) return p;

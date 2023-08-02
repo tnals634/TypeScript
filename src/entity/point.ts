@@ -14,9 +14,6 @@ export class Point {
   @PrimaryGeneratedColumn()
   point_id!: number;
 
-  @Column({ type: "bigint", nullable: false })
-  user_info_id!: number;
-
   @Column({ type: "tinyint", nullable: false })
   point_status!: number;
 

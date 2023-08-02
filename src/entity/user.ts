@@ -19,8 +19,8 @@ export class User {
   @Column({ type: "varchar", nullable: false })
   password!: string;
 
-  @Column({ type: "tinyint", nullable: false })
-  group!: number;
+  @Column({ nullable: false })
+  is_admin!: boolean;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;

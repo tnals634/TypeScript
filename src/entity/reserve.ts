@@ -15,12 +15,6 @@ export class Reserve {
   @PrimaryGeneratedColumn()
   reserve_id!: number;
 
-  @Column({ type: "bigint", nullable: false })
-  user_id!: number;
-
-  @Column({ type: "bigint", nullable: false })
-  performance_id!: number;
-
   @Column({ type: "bigint", nullable: true })
   seat!: number;
 

@@ -23,7 +23,6 @@ export class PerformanceController {
         );
       return res.status(status).json({ message: message });
     } catch (error) {
-      console.log(error);
       if (error instanceof CustomError)
         return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "공연 등록에 실패했습니다." });

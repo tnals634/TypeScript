@@ -5,20 +5,28 @@ export class UserController {
   /** 회원 가입 */
   static createUser = async (req: Request, res: Response) => {
     try {
-      const { email, password, confirmPWD, name, phone, group, authCode } =
-        req.body;
+      const {
+        email,
+        password,
+        confirmPWD,
+        name,
+        nickname,
+        phone,
+        is_admin,
+        authCode,
+      } = req.body;
       const { status, message, result } = await UserService.signup(
         email,
         password,
         confirmPWD,
         name,
+        nickname,
         phone,
-        group,
+        is_admin,
         authCode
       );
       res.status(status).json({ message, result });
     } catch (error) {
-      console.log(error);
       if (error instanceof CustomError)
         return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "회원가입에 실패하였습니다." });
@@ -66,7 +74,6 @@ export class UserController {
 
       return res.status(status).json({ message, result });
     } catch (error) {
-      console.error(error);
       if (error instanceof CustomError)
         return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "오류가 발생하였습니다." });
@@ -81,7 +88,6 @@ export class UserController {
 
       res.status(status).json({ result });
     } catch (error) {
-      console.error(error);
       if (error instanceof CustomError)
         return res.status(error.status).json({ message: error.message });
       return res.status(500).json({ message: "오류가 발생하였습니다." });
