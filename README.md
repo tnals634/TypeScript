@@ -1,6 +1,10 @@
 # TypeScript
 내일배움캠프 TypeScript
 
+### api 명세서(초반에 작성함/수정x)
+- 작업결과와 다를 수 있음
+[https://www.notion.so/typescript-project-API-1efebd80196d4111861bf75a40460bec?pvs=4]
+
 ### erd 다이어그램
 ![image](https://github.com/tnals634/TypeScript/assets/50979515/32cc26fd-f9a9-4e6c-8168-13d607bc7546)
 
